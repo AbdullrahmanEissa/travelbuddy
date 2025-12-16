@@ -1,0 +1,23 @@
+---
+- hosts: all
+  become: yes
+  tasks:
+    - name: Create deployment
+      shell: kubectl create deployment travelbuddy --image=abdueissa/travelbuddy:latest --replicas=2 || kubectl set image deployment/travelbuddy travelbuddy=abdueissa/travelbuddy:latest
+      environment:
+        KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+
+    - name: Expose service
+      shell: kubectl expose deployment travelbuddy --type=NodePort --port=80 --name=travelbuddy-service || true
+      environment:
+        KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+
+    - name: Get service info
+      shell: kubectl get svc travelbuddy-service
+      environment:
+        KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+      register: service_info
+
+    - name: Show access info
+      debug:
+        msg: "{{ service_info.stdout }}"
